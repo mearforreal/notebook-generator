@@ -15,14 +15,26 @@ export default function ChartsBuilder() {
     missingness: true,
     numeric_histogram: true,
     top_categories: true,
-    binary_split: true
+    binary_split: true,
+    distribution_histogram: true,
+    pie_categorical: true,
+    correlation_heatmap: true,
+    violin_box: true,
+    joint_scatter: true,
+    pair_plot: true
   });
 
   const chartDescriptions = {
     missingness: 'Visualize missing data patterns across all columns',
     numeric_histogram: 'Distribution histograms for numeric columns',
     top_categories: 'Bar charts showing top categories in categorical columns',
-    binary_split: 'Pie charts for binary (Yes/No, True/False) columns'
+    binary_split: 'Pie charts for binary (Yes/No, True/False) columns',
+    distribution_histogram: 'EDA §2 — Univariate distplot with KDE overlay for all numeric features',
+    pie_categorical: 'EDA §3 — Proportional pie charts for every categorical column',
+    correlation_heatmap: 'EDA §4 — Color-coded correlation matrix for numeric features',
+    violin_box: 'EDA §5 — Box/violin-style plots comparing distributions across target groups',
+    joint_scatter: 'EDA §6 — Scatter plot with OLS regression line between two numeric columns',
+    pair_plot: 'EDA §7 — Full pair-plot grid: every numeric feature against every other'
   };
 
   const handleFileChange = (e) => {
@@ -185,13 +197,15 @@ export default function ChartsBuilder() {
         {/* Chart.js Info */}
         <div className="bg-purple-50 dark:bg-purple-900/20 border border-purple-200 dark:border-purple-800 rounded-lg p-4">
           <h3 className="text-sm font-semibold text-purple-900 dark:text-purple-100 mb-2">
-            📊 Chart.js Features
+            📊 Heart Disease EDA — Chart.js Dashboard
           </h3>
           <ul className="text-xs text-purple-800 dark:text-purple-200 space-y-1">
-            <li>• Interactive and responsive charts</li>
-            <li>• Automatic color schemes</li>
-            <li>• Hover tooltips with data details</li>
-            <li>• Legend for data series</li>
+            <li>• §2 Distplot — histogram bars + smoothed KDE line overlay</li>
+            <li>• §3 Pie — proportional breakdown of every categorical column</li>
+            <li>• §4 Heatmap — colour-coded Pearson correlation matrix</li>
+            <li>• §5 Box/Violin — IQR box, median marker, mean marker per group</li>
+            <li>• §6 Joint Scatter — scatter + OLS regression line with r value</li>
+            <li>• §7 Pair Plot — full N×N grid of scatter + diagonal histograms</li>
           </ul>
         </div>
 
