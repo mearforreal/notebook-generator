@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import Link from 'next/link';
 import ProjectsList from '@/components/administrator/ProjectsList';
 import NotebookBuilder from '@/components/administrator/NotebookBuilder';
 import TutorialBuilder from '@/components/administrator/TutorialBuilder';
@@ -19,16 +20,24 @@ export default function AdministratorDashboard() {
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-zinc-50 to-zinc-100 dark:from-zinc-950 dark:to-black">
+    <div className="min-h-screen bg-linear-to-br from-zinc-50 to-zinc-100 dark:from-zinc-950 dark:to-black">
       <div className="max-w-7xl mx-auto py-8 px-6">
         {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-5xl font-bold text-zinc-900 dark:text-zinc-100 mb-3">
-            Notebook Studio
-          </h1>
-          <p className="text-lg text-zinc-600 dark:text-zinc-400">
-            Administrator Dashboard — Automate data cleaning, generate tutorials, and visualize insights
-          </p>
+        <div className="mb-8 flex items-start justify-between gap-4">
+          <div>
+            <h1 className="text-5xl font-bold text-zinc-900 dark:text-zinc-100 mb-3">
+              Notebook Studio
+            </h1>
+            <p className="text-lg text-zinc-600 dark:text-zinc-400">
+              Administrator Dashboard — Automate data cleaning, generate tutorials, and visualize insights
+            </p>
+          </div>
+          <Link
+            href="/tutorial"
+            className="shrink-0 inline-flex items-center gap-2 text-sm font-medium text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 px-4 py-2 rounded-lg hover:bg-blue-100 dark:hover:bg-blue-900/40 transition-colors mt-1"
+          >
+            📖 How to use this
+          </Link>
         </div>
 
         {/* Tab Navigation */}
