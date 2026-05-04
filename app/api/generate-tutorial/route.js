@@ -1,8 +1,11 @@
 import { NextResponse } from 'next/server';
 import { promises as fs } from 'fs';
 import path from 'path';
+import Anthropic from '@anthropic-ai/sdk';
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
+
+const anthropic = new Anthropic();
 
 function sanitizeFolderName(name) {
   return name
@@ -21,7 +24,29 @@ function escapeJSX(str) {
     .replace(/}/g, '\\}');
 }
 
-function generateTutorialPage(notebookData, folderName, rawCsvName, cleanedCsvName) {
+async function generateExplanation(code, stepNumber) {
+  if (!code || !code.trim()) {
+    return 'This cell contains no executable code.';
+  }
+
+  const response = await anthropic.messages.create({
+    model: '`claude`-haiku-4-5',///    max_tokens: 400,
+    messages: [
+      {
+        role: 'user',
+        content: `You are a data science educator writing a tutorial. Explain what this Python code does in 2-4 sentences. Focus on: what problem it solves, what transformation it performs, and why it matters in a data cleaning workflow. Be concise and beginner-friendly. Do not include code, headers, or bullet points — plain prose only.
+
+\`\`\`python
+${code}
+\`\`\``,
+      },
+    ],
+  });
+
+  return response.content[0].text.trim();
+}
+
+function generateTutorialPage(notebookData, folderName, rawCsvName, cleanedCsvName, explanations) {
   const cells = notebookData.cells || [];
   const codeCells = cells.filter(cell => cell.cell_type === 'code');
 
@@ -35,7 +60,8 @@ function generateTutorialPage(notebookData, folderName, rawCsvName, cleanedCsvNa
           Data Cleaning Tutorial
         </h2>
         <div className="space-y-2 text-sm text-blue-800 dark:text-blue-200">
-          <p><strong>Raw Dataset:</strong> ${rawCsvName}</p>
+          <p><strong>Raw Dataset:</
+          strong> ${rawCsvName}</p>
           <p><strong>Cleaned Dataset:</strong> ${cleanedCsvName}</p>
           <p><strong>Purpose:</strong> This tutorial demonstrates the step-by-step data cleaning process applied to transform the raw dataset into a cleaned, analysis-ready format.</p>
         </div>
@@ -46,6 +72,7 @@ function generateTutorialPage(notebookData, folderName, rawCsvName, cleanedCsvNa
   codeCells.forEach((cell, index) => {
     const code = Array.isArray(cell.source) ? cell.source.join('') : cell.source;
     const escapedCode = escapeJSX(code);
+    const explanation = escapeJSX(explanations[index] || 'No explanation available for this step.');
 
     cellsContent += `
       {/* Step ${index + 1} */}
@@ -86,7 +113,7 @@ function generateTutorialPage(notebookData, folderName, rawCsvName, cleanedCsvNa
             </h4>
             <div className="bg-yellow-50 dark:bg-yellow-900/20 p-4 rounded-lg border border-yellow-200 dark:border-yellow-800">
               <p className="text-sm text-yellow-900 dark:text-yellow-200">
-                [Add explanation for this step here]
+                {\`${explanation}\`}
               </p>
             </div>
           </div>
@@ -187,6 +214,17 @@ export async function POST(request) {
     const notebookBuffer = Buffer.from(await notebookFile.arrayBuffer());
     const notebookData = JSON.parse(notebookBuffer.toString());
 
+    // Generate Claude explanations for each code cell in parallel
+    const cells = notebookData.cells || [];
+    const codeCells = cells.filter(cell => cell.cell_type === 'code');
+
+    const explanations = await Promise.all(
+      codeCells.map((cell, index) => {
+        const code = Array.isArray(cell.source) ? cell.source.join('') : cell.source;
+        return generateExplanation(code, index + 1);
+      })
+    );
+
     // Create folder structure
     const sanitizedFolderName = sanitizeFolderName(folderName);
     const tutorialDir = path.join(process.cwd(), 'app', 'ipynb', sanitizedFolderName);
@@ -200,12 +238,13 @@ export async function POST(request) {
     await fs.writeFile(path.join(tutorialDir, 'cleaned.csv'), cleanedCsvBuffer);
     await fs.writeFile(path.join(tutorialDir, 'notebook.ipynb'), notebookBuffer);
 
-    // Generate tutorial page
+    // Generate tutorial page with AI explanations
     const tutorialPageContent = generateTutorialPage(
       notebookData,
       sanitizedFolderName,
       rawCsvFile.name,
-      cleanedCsvFile.name
+      cleanedCsvFile.name,
+      explanations
     );
 
     const pageJsPath = path.join(tutorialDir, 'page.js');
